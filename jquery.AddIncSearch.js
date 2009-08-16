@@ -200,8 +200,10 @@ jQuery.fn.AddIncSearch = function() {
             e.stopPropagation();
             if (cdom.selectedIndex<0){
                 return;
-            }            
+            }        
             input.hide();
+			over_input = false;
+			over_select = false;
             selected.get(0).text = cdom.options[cdom.selectedIndex].text;
             selected.get(0).value = cdom.options[cdom.selectedIndex].value;
             chooser.fadeOut(100,function(){chooser.hide()});
@@ -282,8 +284,9 @@ jQuery.fn.AddIncSearch = function() {
             };
         });
 
+     	var pg_step = cdom.size;
         input.keypress(function(e){
-          // console.info('press '+e.keyCode);
+        	console.info('press '+e.keyCode);
             switch(e.keyCode){
             case 9:
                 input.blur();
@@ -292,17 +295,32 @@ jQuery.fn.AddIncSearch = function() {
                 break;
             case 13:
                 chooser.click();
+				button.focusNextInputField();
                 break;
             case 40:
                 if (cdom.options.length > cdom.selectedIndex){
                     cdom.selectedIndex++;
                 };
                 break;
+            case 34:
+                if (cdom.options.length > cdom.selectedIndex + pg_step){
+                    cdom.selectedIndex+=pg_step;					
+                } else {
+					cdom.selectedIndex = cdom.options.length-1;
+				}
+                break;
+            case 33:
+                if (cdom.selectedIndex - pg_step > 0){
+                    cdom.selectedIndex-=pg_step;					
+                } else {
+					cdom.selectedIndex = 0;
+				}
+                break;
             case 38:
                 if (cdom.selectedIndex > 0){
                     cdom.selectedIndex--;
                 }
-                break;
+                break;		
             default:
                 return true;                
             }
