@@ -286,7 +286,7 @@ jQuery.fn.AddIncSearch = function() {
 
      	var pg_step = cdom.size;
         input.keypress(function(e){
-        	console.info('press '+e.keyCode);
+//        	console.info('press '+e.keyCode);
             switch(e.keyCode){
             case 9:
                 input.blur();
