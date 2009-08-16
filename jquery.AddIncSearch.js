@@ -76,6 +76,16 @@ jQuery.fn.AddIncSearch = function() {
         var button_height = orig.outerHeight();
         var selected = jQuery(this.options[this.selectedIndex]).clone();
         var button = jQuery('<select>').append(selected);
+
+		// copy original attributes
+		var myattr = ['name','id','class','style'];
+		for (var at=0;at<4;at++){
+			var val = orig.attr(myattr[at]);
+			orig.removeAttr(myattr[at]);
+			if (val != undefined){
+				button.attr(myattr[at],val);
+			}
+		}
         orig.replaceWith(button);
         button.width(button_width);
         button.height(button_height);
