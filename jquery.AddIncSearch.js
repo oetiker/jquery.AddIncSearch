@@ -45,21 +45,20 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 * **********************************************************************************/
 
-jQuery.fn.focusNextInputField = function() {
-    // this function found on 
-    // http://jqueryminute.com/blog/set-focus-to-the-next-input-field-with-jquery/
+jQuery.fn.moveInputFocus = function(dist) {
     return this.each(function() {
         var fields = $(this).parents('form:eq(0),body').find('button,input,textarea,select');
         var index = fields.index( this );
-        if ( index > -1 && ( index + 1 ) < fields.length ) {
-            fields.eq( index + 1 ).focus();
+        if ( index > -1 &&  index + dist  < fields.length  && index + dist >= 0 ) {
+            fields.eq( index + dist ).focus();
         }
         return false;
     });
 };
+
  
 jQuery.fn.AddIncSearch = function() {
-    if (jQuery.browser.msie){
+    if (jQuery.browser.mmsie){
         return; // do not fiddle with ie .. it is too painful
     };
     var body = jQuery("body");    
@@ -179,22 +178,20 @@ jQuery.fn.AddIncSearch = function() {
             over_chooser=false;
         });
 
-        var select_save;
+
         var input_show = function(){             
-            select_save=selected.get(0).text
-            selected.text('    ');
+            selected.remove();
             if (selected.val() != ''){
-                input.val(select_save);
+                input.val(selected.text());
             }
             input.show();
             chooser.show();
         };
 
         var input_hide = function(){
-            if(selected.text() == '    '){
-                selected.get(0).text = select_save;
-            }
+            button.append(selected);
             input.hide();
+            chooser.hide();
         };
 
         
@@ -211,12 +208,10 @@ jQuery.fn.AddIncSearch = function() {
             if (cdom.selectedIndex<0){
                 return;
             }        
-            input.hide();
-			over_input = false;
-			over_select = false;
             selected.get(0).text = cdom.options[cdom.selectedIndex].text;
             selected.get(0).value = cdom.options[cdom.selectedIndex].value;
-            chooser.fadeOut(100,function(){chooser.hide()});
+            input_hide();
+//            chooser.fadeOut(100,function(){chooser.hide()});
         });
 
         button.focus(function(){
@@ -237,7 +232,7 @@ jQuery.fn.AddIncSearch = function() {
             }
         });
         chooser.blur(function(){
-            over_select = false;
+            over_chooser = false;
             if (!over_input && !over_chooser){
                 chooser.hide();
                 input_hide();
@@ -266,6 +261,8 @@ jQuery.fn.AddIncSearch = function() {
             };
             if (matches >= 1){
                 cdom.selectedIndex = 0;
+                selected.val(cdom.options[cdom.selectedIndex].value);
+                selected.text(cdom.options[cdom.selectedIndex].text);
             }
             if (matches == 0){
                chooser.append(no_match);
@@ -274,7 +271,7 @@ jQuery.fn.AddIncSearch = function() {
                chooser.append(top_match);
             }
             else if (matches == 1 && opt_cnt < 200){
-                chooser.append(opt_arr);
+               chooser.append(opt_arr);
             }
             chooser.show();
             if (final_call){
@@ -294,43 +291,64 @@ jQuery.fn.AddIncSearch = function() {
             };
         });
 
+        var sync_select = function(){
+             selected.val(cdom.options[cdom.selectedIndex].value);
+             selected.text(cdom.options[cdom.selectedIndex].text);
+        };
+
      	var pg_step = cdom.size;
-        input.keypress(function(e){
-//        	console.info('press '+e.keyCode);
+        var shift_press = false;
+        input.keydown(function(e){
+            if (e.keyCode == 16 ) { // shift
+                shift_press = true;
+            }
+        });
+        input.keyup(function(e){
+            if (e.keyCode == 16 ) { // shift
+                shift_press = false;
+            }
+        });
+        input.keydown(function(e){
+//          console.info(e.keyCode);
             switch(e.keyCode){
             case 9:
                 input.blur();
                 chooser.blur();
-                button.focusNextInputField();
+                button.moveInputFocus(shift_press ? -1 : 1);
                 break;
-            case 13:
-                chooser.click();
-				button.focusNextInputField();
+            case 13:  //enter
+                input.blur();
+                chooser.blur();
+                button.moveInputFocus(1);
                 break;
-            case 40:
+            case 40: //down
                 if (cdom.options.length > cdom.selectedIndex){
                     cdom.selectedIndex++;
+                    sync_select();
                 };
                 break;
-            case 34:
+            case 38: //up
+                if (cdom.selectedIndex > 0){
+                    cdom.selectedIndex--;
+                    sync_select();
+                }
+                break;		
+            case 34: //pgdown
                 if (cdom.options.length > cdom.selectedIndex + pg_step){
                     cdom.selectedIndex+=pg_step;					
                 } else {
 					cdom.selectedIndex = cdom.options.length-1;
 				}
+                sync_select();
                 break;
-            case 33:
+            case 33: //pgup
                 if (cdom.selectedIndex - pg_step > 0){
                     cdom.selectedIndex-=pg_step;					
                 } else {
 					cdom.selectedIndex = 0;
 				}
+                sync_select();
                 break;
-            case 38:
-                if (cdom.selectedIndex > 0){
-                    cdom.selectedIndex--;
-                }
-                break;		
             default:
                 return true;                
             }
