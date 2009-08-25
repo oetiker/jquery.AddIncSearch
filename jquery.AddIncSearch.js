@@ -297,24 +297,13 @@ jQuery.fn.AddIncSearch = function() {
         };
 
      	var pg_step = cdom.size;
-        var shift_press = false;
         input.keydown(function(e){
-            if (e.keyCode == 16 ) { // shift
-                shift_press = true;
-            }
-        });
-        input.keyup(function(e){
-            if (e.keyCode == 16 ) { // shift
-                shift_press = false;
-            }
-        });
-        input.keydown(function(e){
-//          console.info(e.keyCode);
+  //        console.info(e.keyCode,e.shiftKey);
             switch(e.keyCode){
             case 9:
                 input.blur();
                 chooser.blur();
-                button.moveInputFocus(shift_press ? -1 : 1);
+                button.moveInputFocus(e.shiftKey ? -1 : 1);
                 break;
             case 13:  //enter
                 input.blur();
