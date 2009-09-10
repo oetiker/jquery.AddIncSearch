@@ -164,6 +164,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 });
             };
             // fix positioning on window resize
+            button.resize(position);
             $(window).resize(position);
 
             // set initial position
@@ -218,6 +219,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 }
                 selected.get(0).text = cdom.options[cdom.selectedIndex].text;
                 selected.get(0).value = cdom.options[cdom.selectedIndex].value;
+                selected.parent().change();
                 input_hide();
             };
 
@@ -283,11 +285,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 if (matches == 0){
                     chooser.append(no_match);
                 }
-                else if (matches >= 100){
-                    chooser.append(top_match);
-                }
                 else if (matches == 1 && opt_cnt < 200){
                     chooser.append(opt_arr);
+                }
+                else if (matches >= 100){
+                    chooser.append(top_match);
                 }
                 chooser.show();
                 // if we were running during the previous
