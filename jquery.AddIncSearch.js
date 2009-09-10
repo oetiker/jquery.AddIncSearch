@@ -7,8 +7,20 @@ $Id$
 This jquery 1.3.x plugin adds incremental search to selectboxes of
 your choics.
 
-If you want to 'modify' all selectboxes in your document, do the
+If you want to 'modify' selectboxes in your document, do the
 following.
+
+The behaviour of the widget can be tuned with the following options:
+
+  maxListSize       if the total number of entries in the selectbox are
+                    less than maxListSize, show them all
+
+  maxMultiMatch     if multiple entries match, how many should be displayed.
+
+  warnMultiMatch    string to append to a list of entries cut short
+                    by maxMultiMatch
+                  
+  warnNoMatch       string to show in the list when no entries match
 
  <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -18,7 +30,12 @@ following.
  <script type="application/javascript" src="jquery.AddIncSearch.js"></script>
  <script type="application/javascript">
  jQuery(document).ready(function() {
-    jQuery("select").AddIncSearch();
+    jQuery("select").AddIncSearch({
+        maxListSize   : 200,
+        maxMultiMatch : 100,
+        warnMultiMatch : 'top matches ...',
+        warnNoMatch    : 'no matches ...'
+    });
  });
  </script>
  <body>
@@ -51,6 +68,17 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     // setup a namespace for us
     var nsp = 'AddIncSearch';
 
+    $[nsp] = {
+        // let the user override the default
+        // $.pluginPattern.defaultOptions.optA = false
+        defaultOptions: {
+            maxListSize    : 200,
+            maxMultiMatch  : 100,
+            warnMultiMatch : 'top matches ...',
+            warnNoMatch    : 'no matches ...'
+        }
+    };
+
     // Private Variables and Functions
     var _ = {
         moveInputFocus:  function (jq,dist) {
@@ -64,16 +92,26 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                  }
             return false;
         },
-        action: function(){
-            var body = $('body');
+
+        action: function(options){
             if (this.nodeName != 'SELECT'){ // only select objects
                 return this;
             }
             if (this.size > 1){  // no select boxes
                 return this;
             }
-            var opt_cnt = this.length;
+            var body = $('body');
+            var meta_opts = options;
             var $this = $(this);
+            // lets you override the options
+            // inside the dom objects class property
+            // requires the jQuery metadata plugin
+            // <div class="hello {color: 'red'}">ddd</div>
+            if ($.meta){
+                meta_opts = $.extend({}, options, $this.data());
+            }
+
+            var opt_cnt = this.length;
             var button_width = $this.outerWidth();
             var button_height = $this.outerHeight();
             var selected = $(this.options[this.selectedIndex]).clone();
@@ -91,8 +129,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             $this.replaceWith(button);
             button.width(button_width);
             button.height(button_height);
-            var top_match = $('<option>top matches ...</option>').get(0);
-            var no_match = $('<option>no matches ...</option>').get(0);
+            var top_match = $('<option>'+meta_opts.warnMultiMatch+'</option>').get(0);
+            var no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').get(0);
             top_match.disabled=true;
             no_match.disabled=true;
             var text_arr = [];
@@ -271,9 +309,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 chooser.hide();
                 chooser.empty();
 				var match_id;
-                for(var i=0;i<opt_cnt && matches < 100;i++){
+                for(var i=0;i<opt_cnt && matches < meta_opts.maxMultiMatch;i++){
                     if(search == '' || text_arr[i].indexOf(search,0) >= 0){
-					    console.log('"'+text_arr[i]+'"'+search);
 	                    matches++;
                         chooser.append(opt_arr[i]);
 						match_id = i;
@@ -281,18 +318,17 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 };
                 if (matches >= 1){
                     cdom.selectedIndex = 0;
-    				console.log('set index');
 	                selected.val(cdom.options[0].value);
                     selected.text(cdom.options[0].text);
                 }
                 if (matches == 0){
                     chooser.append(no_match);
                 }
-                else if (matches == 1 && opt_cnt < 200){
+                else if (matches == 1 && opt_cnt < meta_opts.maxListSize){
                     chooser.append(opt_arr);
 					cdom.selectedIndex = match_id;
                 }
-                else if (matches >= 100){
+                else if (matches >= meta_opts.maxMultiMatch){
                     chooser.append(top_match);
                 }
                 chooser.show();
@@ -379,11 +415,18 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         },
     };
 
-    $.fn[nsp] = function() {
+    $.fn[nsp] = function(options) {
         if ($.browser.mmsie){
             return this; // do not fiddle with ie .. it is too painful
         };
-        return this.each(_.action);
+        var localOpts = $.extend(
+            {}, // start with an empty map
+            $[nsp].defaultOptions, // add defaults
+            options // add options
+        );
+        // take care to pass on the context. without the call
+        // action would be running in the _ context
+        return this.each(function(){_.action.call(this,localOpts)});
     };
 
 })(jQuery);
