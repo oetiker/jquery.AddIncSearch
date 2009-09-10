@@ -261,9 +261,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             // with a timer
             function searcher(){
                 var matches = 0;
-                var search = input.val().toLowerCase();
-
-                if (search_cache == search){ // no change ...
+                var search = $.trim(input.val().toLowerCase());
+	            if (search_cache == search){ // no change ...
                     timer = null;
                     return true;
                 }
@@ -271,22 +270,27 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 search_cache = search;
                 chooser.hide();
                 chooser.empty();
+				var match_id;
                 for(var i=0;i<opt_cnt && matches < 100;i++){
                     if(search == '' || text_arr[i].indexOf(search,0) >= 0){
-                        matches++;
+					    console.log('"'+text_arr[i]+'"'+search);
+	                    matches++;
                         chooser.append(opt_arr[i]);
+						match_id = i;
                     }
                 };
                 if (matches >= 1){
                     cdom.selectedIndex = 0;
-                    selected.val(cdom.options[cdom.selectedIndex].value);
-                    selected.text(cdom.options[cdom.selectedIndex].text);
+    				console.log('set index');
+	                selected.val(cdom.options[0].value);
+                    selected.text(cdom.options[0].text);
                 }
                 if (matches == 0){
                     chooser.append(no_match);
                 }
                 else if (matches == 1 && opt_cnt < 200){
                     chooser.append(opt_arr);
+					cdom.selectedIndex = match_id;
                 }
                 else if (matches >= 100){
                     chooser.append(top_match);
