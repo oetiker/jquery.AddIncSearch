@@ -407,11 +407,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             };
             input.keydown(keydown_handler);
             return;
-        },
+        }
     };
 
     $.fn[nsp] = function(options) {
-        if ($.browser.mmsie){
+        if ($.browser.msie){
             return this; // do not fiddle with ie .. it is too painful
         };
         var localOpts = $.extend(
