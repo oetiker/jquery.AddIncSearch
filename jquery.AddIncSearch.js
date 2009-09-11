@@ -81,16 +81,19 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
     // Private Variables and Functions
     var _ = {
-        moveInputFocus:  function (jq,dist) {
-            var fields = jq.parents('form:eq(0),body')
-                .find('button,input,textarea,select');
-            var index = fields.index( this );
+        moveInputFocus: function (jq,dist) {
+            var fields = jq.parents('form,body').eq(0)
+                .find('button,input[type!=hidden],textarea,select');
+            var index = fields.index( jq );
             if ( index > -1
-                 &&  index + dist  < fields.length
+                 && index + dist < fields.length
                  && index + dist >= 0 ) {
-                     fields.eq( index + dist ).focus();
-                 }
-            return false;
+                 fields.eq( index + dist ).focus();
+                 return true;
+            }
+            else {
+                 return false;
+            }                       
         },
 
         action: function(options){
@@ -111,34 +114,24 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 meta_opts = $.extend({}, options, $this.data());
             }
 
-            var opt_cnt = this.length;
-            var button_width = $this.outerWidth();
-            var button_height = $this.outerHeight();
-            var selected = $(this.options[this.selectedIndex]).clone();
-            var button = $('<select>').append(selected);
-
-		    // copy original attributes
-		    var myattr = ['name','id','class','style'];
-		    for (var at=0;at<4;at++){
-                var val = $this.attr(myattr[at]);
-			    $this.removeAttr(myattr[at]);
-			    if (val != undefined){
-				    button.attr(myattr[at],val);
-			    }
-		    }
-            $this.replaceWith(button);
-            button.width(button_width);
-            button.height(button_height);
-            var top_match = $('<option>'+meta_opts.warnMultiMatch+'</option>').get(0);
-            var no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').get(0);
-            top_match.disabled=true;
-            no_match.disabled=true;
             var text_arr = [];
             var opt_arr = [];
+            var opt_cnt = this.length;
             for (var i =0; i<opt_cnt;i++){
                 opt_arr[i] = this.options[i];
                 text_arr[i] = opt_arr[i].text.toLowerCase();
             }
+            var button_width = $this.outerWidth();
+            var button_height = $this.outerHeight();
+            var selected = $(this.options[this.selectedIndex]).clone();
+            // fix size of the list to whatever it was 'before'
+            $this.width(button_width);
+            $this.height(button_height);
+            var button = $this.empty().append(selected);
+            var top_match = $('<option>'+meta_opts.warnMultiMatch+'</option>').get(0);
+            var no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').get(0);
+            top_match.disabled=true;
+            no_match.disabled=true;
 
             var blocker = $('<div>');
             blocker.css({
@@ -147,7 +140,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 height: button.outerHeight(),
                 backgroundColor: '#ffffff',
                 opacity: 0.01,
-                zIndex: 1000
+                zIndex: 1001
             });
             blocker.appendTo(body);
 
@@ -406,9 +399,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     sync_select();
                     break;
                 default:
-                    return;
+                    return true;
                 }
-                return;
+                // we handled the key. stop
+                // doing anything with it!
+                return false;
             };
             input.keydown(keydown_handler);
             return;
