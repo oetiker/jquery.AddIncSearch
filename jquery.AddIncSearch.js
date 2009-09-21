@@ -26,9 +26,9 @@ The behaviour of the widget can be tuned with the following options:
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
  <head>
- <script type="application/javascript" src="jquery-1.3.2.min.js"></script>
- <script type="application/javascript" src="jquery.AddIncSearch.js"></script>
- <script type="application/javascript">
+ <script type="text/javascript" src="jquery-1.3.2.min.js"></script>
+ <script type="text/javascript" src="jquery.AddIncSearch.js"></script>
+ <script type="text/javascript">
  jQuery(document).ready(function() {
     jQuery("select").AddIncSearch({
         maxListSize   : 200,
