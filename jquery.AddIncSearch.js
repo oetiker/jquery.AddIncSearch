@@ -411,9 +411,12 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     };
 
     $.fn[nsp] = function(options) {
-//        if ($.browser.msie){
-//            return this; // do not fiddle with ie .. it is too painful
-//       };
+        if ($.browser.msie){
+            var bvers = (parseInt(jQuery.browser.version));
+            if (bvers < 7) {
+                  return this; // do not use with ie6, does not work
+            }
+        }
         var localOpts = $.extend(
             {}, // start with an empty map
             $[nsp].defaultOptions, // add defaults
