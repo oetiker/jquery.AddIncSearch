@@ -22,6 +22,9 @@ The behaviour of the widget can be tuned with the following options:
                   
   warnNoMatch       string to show in the list when no entries match
 
+  zIndex            zIndex for the additional page elements
+                    it should be higher than the index of the select boxes.
+
  <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
@@ -75,7 +78,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             maxListSize    : 200,
             maxMultiMatch  : 100,
             warnMultiMatch : 'top matches ...',
-            warnNoMatch    : 'no matches ...'
+            warnNoMatch    : 'no matches ...',
+	        zIndex         : 1e6
         }
     };
 
@@ -140,7 +144,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 height: button.outerHeight(),
                 backgroundColor: '#ffffff',
                 opacity: 0.01,
-                zIndex: 1001
+                zIndex : meta_opts.zIndex.toString(10)
             });
             blocker.appendTo(body);
 
@@ -166,7 +170,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 borderColor: 'transparent',
                 backgroundColor: 'transparent',
                 outlineStyle: 'none',
-                zIndex: 1001
+                zIndex: (meta_opts.zIndex+1).toString(10)
             });
 
             var chooser = $('<select size=10>');
@@ -174,7 +178,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             chooser.css({
                 position: 'absolute',
                 width:  button.outerWidth(),
-                zIndex: 1001
+                zIndex: (meta_opts.zIndex+1).toString(10)
             });
             chooser.hide();
             chooser.appendTo(body);
