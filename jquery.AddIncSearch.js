@@ -252,9 +252,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 if (cdom.selectedIndex<0){
                     return;
                 }
-                selected.get(0).text = cdom.options[cdom.selectedIndex].text;
-                selected.get(0).value = cdom.options[cdom.selectedIndex].value;
-                selected.parent().change();
+                sync_select();
                 input_hide();
             };
 
@@ -359,6 +357,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             function sync_select(){
                 selected.val(cdom.options[cdom.selectedIndex].value);
                 selected.text(cdom.options[cdom.selectedIndex].text);
+                selected.parent().change();
             };
 
             var pg_step = cdom.size;
