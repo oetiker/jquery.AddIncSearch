@@ -19,7 +19,7 @@ The behaviour of the widget can be tuned with the following options:
 
   warnMultiMatch    string to append to a list of entries cut short
                     by maxMultiMatch
-                  
+
   warnNoMatch       string to show in the list when no entries match
 
   zIndex            zIndex for the additional page elements
@@ -97,7 +97,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             }
             else {
                  return false;
-            }                       
+            }
         },
 
         action: function(options){
@@ -107,7 +107,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             if (this.size > 1){  // no select boxes
                 return this;
             }
-            var body = $('body');
+            var $body = $('body');
             var meta_opts = options;
             var $this = $(this);
             // lets you override the options
@@ -137,7 +137,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             top_match.disabled=true;
             no_match.disabled=true;
 
-            var blocker = $('<div>');
+            var blocker = $('<div/>');
             blocker.css({
                 position: 'absolute',
                 width:  button.outerWidth(),
@@ -146,11 +146,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 opacity: 0.01,
                 zIndex : meta_opts.zIndex.toString(10)
             });
-            blocker.appendTo(body);
+            blocker.appendTo($body);
 
-            var input = $('<input type="text">');
+            var input = $('<input type="text"/>');
             input.hide();
-            input.appendTo(body);
+            input.appendTo($body);
 
             input.width(button.outerWidth());
             input.height(button.outerHeight());
@@ -173,7 +173,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 zIndex: (meta_opts.zIndex+1).toString(10)
             });
 
-            var chooser = $('<select size=10>');
+            var chooser = $('<select size=10/>');
             var cdom = chooser.get(0);
             chooser.css({
                 position: 'absolute',
@@ -181,7 +181,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 zIndex: (meta_opts.zIndex+1).toString(10)
             });
             chooser.hide();
-            chooser.appendTo(body);
+            chooser.appendTo($body);
 
             var position = function (){
                 var offset = button.offset();
@@ -329,7 +329,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 chooser.show();
                 // if we were running during the previous
                 // keystroke do another run to make sure
-                // we got it all                
+                // we got it all
                 if (final_call){
                     setTimeout(final_call,0);
                     final_call = null;
