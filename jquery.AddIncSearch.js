@@ -79,7 +79,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             maxMultiMatch  : 100,
             warnMultiMatch : 'top matches ...',
             warnNoMatch    : 'no matches ...',
-	        zIndex         : 1e6
+	        zIndex         : 'auto'
         }
     };
 
@@ -107,9 +107,9 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             if (this.size > 1){  // no select boxes
                 return this;
             }
-            var $body = $('body');
-            var meta_opts = options;
             var $this = $(this);
+            var $parent = $this.parent();
+            var meta_opts = options;
             // lets you override the options
             // inside the dom objects class property
             // requires the jQuery metadata plugin
@@ -143,14 +143,13 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 width:  button.outerWidth(),
                 height: button.outerHeight(),
                 backgroundColor: '#ffffff',
-                opacity: 0.01,
-                zIndex : meta_opts.zIndex.toString(10)
+                opacity: 0.01
             });
-            blocker.appendTo($body);
+            blocker.appendTo($parent);
 
             var input = $('<input type="text"/>');
             input.hide();
-            input.appendTo($body);
+            input.appendTo($parent);
 
             input.width(button.outerWidth());
             input.height(button.outerHeight());
@@ -170,18 +169,27 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 borderColor: 'transparent',
                 backgroundColor: 'transparent',
                 outlineStyle: 'none',
-                zIndex: (meta_opts.zIndex+1).toString(10)
             });
-
             var chooser = $('<select size=10/>');
             var cdom = chooser.get(0);
             chooser.css({
                 position: 'absolute',
                 width:  button.outerWidth(),
-                zIndex: (meta_opts.zIndex+1).toString(10)
             });
             chooser.hide();
-            chooser.appendTo($body);
+            if (meta_opts.zIndex && /^\d+$/.test(meta_opts.zIndex)){
+                blocker.css({
+                    zIndex : meta_opts.zIndex.toString(10)
+                })
+                input.css({
+                    zIndex : (meta_opts.zIndex+1).toString(10)
+                })
+                chooser.css({
+                    zIndex : (meta_opts.zIndex+1).toString(10)
+                })
+            }
+
+            chooser.appendTo($parent);
 
             var position = function (){
                 var offset = button.offset();
@@ -233,6 +241,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
             function input_hide(){
                 button.append(selected);
+                button.change();
                 input.hide();
                 chooser.hide();
             };
@@ -355,9 +364,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             input.keyup(keyup_handler);
 
             function sync_select(){
-                selected.val(cdom.options[cdom.selectedIndex].value);
-                selected.text(cdom.options[cdom.selectedIndex].text);
-                selected.parent().change();
+                selected = $(cdom.options[cdom.selectedIndex]).clone();
             };
 
             var pg_step = cdom.size;
