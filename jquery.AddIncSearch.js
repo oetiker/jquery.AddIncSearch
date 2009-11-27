@@ -1,6 +1,7 @@
 /* **************************************************************************
 Title: Incremental Search for Select Boxes
 Copyright: Tobi Oetiker <tobi@oetiker.ch>, OETIKER+PARTNER AG
+Contributions from: Haggi <hagman@gmx.de>
 
 $Id$
 
@@ -16,7 +17,7 @@ The behaviour of the widget can be tuned with the following options:
                     less than maxListSize, show them all
 
   maxMultiMatch     if multiple entries match, how many should be displayed.
-
+    
   warnMultiMatch    string to append to a list of entries cut short
                     by maxMultiMatch
 
@@ -34,10 +35,10 @@ The behaviour of the widget can be tuned with the following options:
  <script type="text/javascript">
  jQuery(document).ready(function() {
     jQuery("select").AddIncSearch({
-        maxListSize   : 200,
-        maxMultiMatch : 100,
-        warnMultiMatch : 'top matches ...',
-        warnNoMatch    : 'no matches ...'
+        maxListSize: 200,
+        maxMultiMatch: 100,
+        warnMultiMatch: 'top {0} matches ...',
+        warnNoMatch: 'no matches ...'
     });
  });
  </script>
@@ -75,11 +76,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         // let the user override the default
         // $.pluginPattern.defaultOptions.optA = false
         defaultOptions: {
-            maxListSize    : 200,
-            maxMultiMatch  : 100,
-            warnMultiMatch : 'top matches ...',
-            warnNoMatch    : 'no matches ...',
-	        zIndex         : 'auto'
+            maxListSize: 200,
+            maxMultiMatch: 100,
+            warnMultiMatch: 'top {0} matches ...',
+            warnNoMatch: 'no matches ...',
+            zIndex: 'auto'
         }
     };
 
@@ -101,15 +102,16 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         },
 
         action: function(options){
-            if (this.nodeName != 'SELECT'){ // only select objects
+            
+            // only active select objects with drop down capability
+            if (this.nodeName != 'SELECT' || this.size > 1) {
                 return this;
             }
-            if (this.size > 1){  // no select boxes
-                return this;
-            }
+
             var $this = $(this);
             var $parent = $this.parent();
             var meta_opts = options;
+            
             // lets you override the options
             // inside the dom objects class property
             // requires the jQuery metadata plugin
@@ -121,48 +123,56 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             var text_arr = [];
             var opt_arr = [];
             var opt_cnt = this.length;
-            for (var i =0; i<opt_cnt;i++){
+            var selectedIndex = this.selectedIndex; 
+            for (var i=0; i<opt_cnt;i++){
                 opt_arr[i] = this.options[i];
                 text_arr[i] = opt_arr[i].text.toLowerCase();
             }
-            var button_width = $this.outerWidth();
-            var button_height = $this.outerHeight();
-            var selected = $(this.options[this.selectedIndex]).clone();
+            
+            var $selected = $(this.options[selectedIndex]).clone();
+            
             // fix size of the list to whatever it was 'before'
-            $this.width(button_width);
-            $this.height(button_height);
-            var button = $this.empty().append(selected);
-            var top_match = $('<option>'+meta_opts.warnMultiMatch+'</option>').get(0);
-            var no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').get(0);
-            top_match.disabled=true;
-            no_match.disabled=true;
-
-            var blocker = $('<div/>');
-            blocker.css({
+            $this.width($this.outerWidth());
+            $this.height($this.outerHeight());
+            
+            $this.empty().append($selected);
+            
+            // 
+            var $top_match = $('<option>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</option>').get(0);
+            var $no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').get(0);
+            
+            $top_match.disabled = true;
+            $no_math.disabled = true;
+            
+            // overlay div to block events of select element
+            var $blocker = $('<div/>');
+            $blocker.css({
                 position: 'absolute',
-                width:  button.outerWidth(),
-                height: button.outerHeight(),
-                backgroundColor: '#ffffff',
-                opacity: 0.01
+                width:  $this.outerWidth(),
+                height: $this.outerHeight()
+                /*
+                ,backgroundColor: '#FFFFFF'
+                ,opacity: 0.41
+                */
             });
-            blocker.appendTo($parent);
+            $blocker.appendTo($parent);
 
-            var input = $('<input type="text"/>');
-            input.hide();
-            input.appendTo($parent);
-
-            input.width(button.outerWidth());
-            input.height(button.outerHeight());
-            input.css({
+            // overlay text field for searching capability
+            var $input = $('<input type="text"/>');
+            $input.hide();
+            $input.appendTo($parent);
+            $input.width($this.outerWidth() - 22);
+            $input.height($this.outerHeight());
+            $input.css({
                 position: 'absolute',
-                borderLeftWidth: button.css('border-left-width'),
-                paddingLeft: button.css('padding-left'),
-                borderTopWidth: button.css('border-top-width'),
-                paddingTop: button.css('padding-top'),
-                borderRightWidth: button.css('border-right-width'),
-                paddingRight: button.css('padding-right'),
-                borderBottomWidth: button.css('border-bottom-width'),
-                paddingBottom: button.css('padding-bottom'),
+                borderLeftWidth: $this.css('border-left-width'),
+                paddingLeft: $this.css('padding-left'),
+                borderTopWidth: $this.css('border-top-width'),
+                paddingTop: $this.css('padding-top'),
+                borderRightWidth: $this.css('border-right-width'),
+                paddingRight: $this.css('padding-right'),
+                borderBottomWidth: $this.css('border-bottom-width'),
+                paddingBottom: $this.css('padding-bottom'),
                 padding: 0,
                 margin: 0,
                 borderStyle: 'solid',
@@ -170,262 +180,270 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 backgroundColor: 'transparent',
                 outlineStyle: 'none',
             });
-            var chooser = $('<select size=10/>');
-            var cdom = chooser.get(0);
-            chooser.css({
+            
+            // drop down replacement
+            var chooserSize = Math.min(opt_cnt, 20);
+            var $chooser = $('<select size="' + chooserSize + '"/>')
+            $chooser.hide();
+            $chooser.css({
                 position: 'absolute',
-                width:  button.outerWidth(),
+                width:  $this.outerWidth()
             });
-            chooser.hide();
-            if (meta_opts.zIndex && /^\d+$/.test(meta_opts.zIndex)){
-                blocker.css({
-                    zIndex : meta_opts.zIndex.toString(10)
-                })
-                input.css({
-                    zIndex : (meta_opts.zIndex+1).toString(10)
-                })
-                chooser.css({
-                    zIndex : (meta_opts.zIndex+1).toString(10)
-                })
+            
+            // default entries depends on selectedIndex
+            // of the source select object and maxMultiMatch count
+            var mc = Math.floor(meta_opts.maxMultiMatch / 2);
+            var st = Math.max(0, (selectedIndex - mc));
+            var len = Math.min(opt_arr.length, (selectedIndex + mc));
+            var si = selectedIndex == 0 ? selectedIndex : (len - selectedIndex);
+            for (var i=st; i < len; i++) {
+                $chooser.append(opt_arr[i]);
             }
+            if(opt_arr.length > meta_opts.maxMultiMatch) {
+                $chooser.append($top_match);
+            }
+                        
+            // get dom object of jquery $chooser
+            var cdom = $chooser.get(0);
+            
+            // set default selected index
+            cdom.selectedIndex = si;
+                        
+            // z-index handling
+            var zIndex = /^\d+$/.test($this.css("z-index")) ? $this.css("z-index") : 1;
+            // if z-index option is defined, use it instead of select box z-index
+            if (meta_opts.zIndex && /^\d+$/.test(meta_opts.zIndex))
+                zIndex = meta_opts.zIndex;
+            $blocker.css("z-index", zIndex.toString(10));
+            $input.css("z-index", (zIndex+1).toString(10));
+            $chooser.css("z-index", (zIndex+1).toString(10));
 
-            chooser.appendTo($parent);
+            $chooser.appendTo($parent);
 
-            var position = function (){
-                var offset = button.offset();
-                chooser.css({
-                    top: offset.top+button.outerHeight(),
+            // positioning
+            var position = function () {
+                var offset = $this.offset();
+                $chooser.css({
+                    top: offset.top+$this.outerHeight(),
                     left: offset.left
                 });
-                input.css({
+                $input.css({
                     top: offset.top,
                     left: offset.left+2
                 });
-                blocker.css({
+                $blocker.css({
                     top: offset.top,
                     left: offset.left
                 });
             };
             // fix positioning on window resize
-            button.resize(position);
+            $this.resize(position);
             $(window).resize(position);
 
             // set initial position
             position();
-
-            var over_input = false;
-            input.mouseover(function(){
-                over_input=true;
+            
+            // track mouse movement
+            var over_blocker = false;
+            $blocker.mouseover(function(){
+                over_blocker = true;
             });
-            input.mouseout(function(){
-                over_input=false;
+            $blocker.mouseout(function(){
+                over_blocker = false;
             });
-
             var over_chooser = false;
-            chooser.mouseover(function(){
-                over_chooser=true;
-            });
-            chooser.mouseout(function(){
-                over_chooser=false;
-            });
-
-
-            function input_show(){
-                selected.remove();
-                if (selected.val() != ''){
-                    input.val(selected.text());
-                }
-                input.show();
-                chooser.show();
-            };
-
-            function input_hide(){
-                button.append(selected);
-                button.change();
-                input.hide();
-                chooser.hide();
-            };
-
-            function blocker_click(e){
-                input_show();
-                input.focus();
-                input.select();
-                input.keyup();
-                e.stopPropagation();
-            };
-
-            blocker.click(blocker_click);
-
-            function chooser_click(e){
-                e.stopPropagation();
-                if (cdom.selectedIndex<0){
-                    return;
-                }
-                sync_select();
-                input_hide();
-            };
-
-            chooser.click(chooser_click);
-
-            button.focus(function(){
-                blocker.click();
-            });
-
-            input.focus(function(){
-                over_input = true;
-            });
-
-            chooser.focus(function(){
+            $chooser.mouseover(function(){
                 over_chooser = true;
             });
-
-            input.blur(function(){
-                over_input = false;
-                if (!over_input && !over_chooser){
-                    chooser.hide();
-                    input_hide();
-                }
-            });
-            chooser.blur(function(){
+            $chooser.mouseout(function(){
                 over_chooser = false;
-                if (!over_input && !over_chooser){
-                    chooser.hide();
+            });
+
+            // show dropdown replacement
+            function input_show(){
+                $selected.remove();
+                if ($selected.val() != ''){
+                    $input.val($selected.text());
+                }
+                $input.show();
+                $chooser.show();
+            };
+
+            // hide dropdown replacement
+            function input_hide(){
+                $this.append($selected);
+                $this.change();
+                $input.hide();
+                $chooser.hide();
+            };
+            
+            // toggle click event on blocker div
+            $blocker.toggle(
+                function(e) {
+                    // exit event on disabled select object
+                    if($this.attr("disabled")) 
+                        return false;
+                    input_show();
+                    $input.focus();
+                    $input.select();
+                    e.stopPropagation();
+                },
+                function(e) {
                     input_hide();
+                    e.stopPropagation();
+                }
+            );
+            
+            // add click event on chooser
+            $chooser.click(function(e) {
+                e.stopPropagation();
+                if (cdom.selectedIndex < 0)
+                    return;
+                sync_select();
+                $blocker.click();
+            });
+
+            // trigger focus / blur
+            $this.focus(function(){
+                $blocker.click();
+            });
+            $chooser.focus(function(){
+                over_chooser = true;
+            });
+            $input.blur(function() {
+                if (!over_blocker && !over_chooser) {
+                    $blocker.click();
                 }
             });
 
             var timer = null;
-            var final_call = null;
-            var search_cache = 'x';
+            var search_cache;
+            var search;
 
             // the actual searching gets done here
             // to not block input, we get called
             // with a timer
-            function searcher(){
+            function searcher() {
                 var matches = 0;
-                var search = $.trim(input.val().toLowerCase());
-	            if (search_cache == search){ // no change ...
+                if (search_cache == search){ // no change ...
                     timer = null;
                     return true;
                 }
 
                 search_cache = search;
-                chooser.hide();
-                chooser.empty();
-				var match_id;
+                $chooser.hide();
+                $chooser.empty();
+                var match_id;
                 for(var i=0;i<opt_cnt && matches < meta_opts.maxMultiMatch;i++){
                     if(search == '' || text_arr[i].indexOf(search,0) >= 0){
-	                    matches++;
-                        chooser.append(opt_arr[i]);
-						match_id = i;
+                        matches++;
+                        $chooser.append(opt_arr[i]);
+                        match_id = i;
                     }
                 };
                 if (matches >= 1){
                     cdom.selectedIndex = 0;
-	                selected.val(cdom.options[0].value);
-                    selected.text(cdom.options[0].text);
+                    $selected.val(cdom.options[0].value);
+                    $selected.text(cdom.options[0].text);
                 }
                 if (matches == 0){
-                    chooser.append(no_match);
+                    $chooser.append($no_math);
                 }
                 else if (matches == 1 && opt_cnt < meta_opts.maxListSize){
-                    chooser.append(opt_arr);
-					cdom.selectedIndex = match_id;
+                    $chooser.append(opt_arr);
+                    cdom.selectedIndex = match_id;
                 }
                 else if (matches >= meta_opts.maxMultiMatch){
-                    chooser.append(top_match);
+                    $chooser.append($top_match);
                 }
-                chooser.show();
-                // if we were running during the previous
-                // keystroke do another run to make sure
-                // we got it all
-                if (final_call){
-                    setTimeout(final_call,0);
-                    final_call = null;
-                }
+                $chooser.show();
+                
                 timer = null;
             };
-
-            function keyup_handler(e){
-                // if no timer is running, start one
-                // to call the searcher function
-                if (timer == null){
-                    timer = setTimeout(searcher,0);
-                    final_call = null;
-                }
-                else {
-                    // if a timer is running
-                    // make sure to call searcher once again
-                    // after the timer is done
-                    final_call = searcher;
-                };
-            };
-
-            input.keyup(keyup_handler);
-
-            function sync_select(){
-                selected = $(cdom.options[cdom.selectedIndex]).clone();
-            };
-
-            var pg_step = cdom.size;
-            function keydown_handler(e){
-                switch(e.keyCode){
-                case 9:
-                    input.blur();
-                    chooser.blur();
-                    _.moveInputFocus(button,e.shiftKey ? -1 : 1);
-                    break;
-                case 13:  //enter
-                    input.blur();
-                    chooser.blur();
-                    _.moveInputFocus(button,1);
-                    break;
-                case 40: //down
-                    if (cdom.options.length > cdom.selectedIndex){
-                        cdom.selectedIndex++;
-                        sync_select();
-                    };
-                    break;
-                case 38: //up
-                    if (cdom.selectedIndex > 0){
-                        cdom.selectedIndex--;
-                        sync_select();
-                    }
-                    break;
-                case 34: //pgdown
-                    if (cdom.options.length > cdom.selectedIndex + pg_step){
-                        cdom.selectedIndex+=pg_step;
-                    } else {
-					    cdom.selectedIndex = cdom.options.length-1;
-				    }
-                    sync_select();
-                    break;
-                case 33: //pgup
-                    if (cdom.selectedIndex - pg_step > 0){
-                        cdom.selectedIndex-=pg_step;
-                    } else {
-					    cdom.selectedIndex = 0;
-				    }
-                    sync_select();
-                    break;
-                default:
+            
+            // trigger event keyup
+            $input.keyup(function(e) {
+                
+                // break searching while using navigation keys
+                if($.inArray(e.keyCode, new Array(9, 13, 40, 38, 34, 33)) > 0)
                     return true;
+                
+                // set search text
+                search = $.trim($input.val().toLowerCase());
+                
+                // if a previous time is running, stop it
+                if (timer != null)
+                    clearTimeout(timer);
+                
+                // start new timer      
+                timer = setTimeout(searcher, 0);
+            });
+            
+            // synchronize selected item on dropdown replacement and source select object
+            function sync_select(){
+                $selected = $(cdom.options[cdom.selectedIndex]).clone();
+            };
+
+            // trigger keydown event for keyboard usage
+            var pg_step = cdom.size;
+            $input.keydown(function(e) {
+                switch(e.keyCode) {
+                    case 9:
+                        $input.blur();
+                        $chooser.blur();
+                        _.moveInputFocus($this,e.shiftKey ? -1 : 1);
+                        break;
+                    case 13:  //enter
+                        $input.blur();
+                        $chooser.blur();
+                        _.moveInputFocus($this,1);
+                        break;
+                    case 40: //down
+                        if (cdom.options.length > cdom.selectedIndex){
+                            cdom.selectedIndex++;
+                            sync_select();
+                        };
+                        break;
+                    case 38: //up
+                        if (cdom.selectedIndex > 0){
+                            cdom.selectedIndex--;
+                            sync_select();
+                        }
+                        break;
+                    case 34: //pgdown
+                        if (cdom.options.length > cdom.selectedIndex + pg_step){
+                            cdom.selectedIndex+=pg_step;
+                        } else {
+                            cdom.selectedIndex = cdom.options.length-1;
+                        }
+                        sync_select();
+                        break;
+                    case 33: //pgup
+                        if (cdom.selectedIndex - pg_step > 0){
+                            cdom.selectedIndex-=pg_step;
+                        } else {
+                            cdom.selectedIndex = 0;
+                        }
+                        sync_select();
+                        break;
+                    default:
+                        return true;
                 }
                 // we handled the key. stop
                 // doing anything with it!
                 return false;
-            };
-            input.keydown(keydown_handler);
+            });
+
             return;
         }
     };
 
     $.fn[nsp] = function(options) {
-        if ($.browser.msie){
-            var bvers = (parseInt(jQuery.browser.version));
-            if (bvers < 7) {
-                  return this; // do not use with ie6, does not work
-            }
+        if ($.browser.msie){
+            var bvers = (parseInt($.browser.version));
+            if (bvers < 7) {
+                return this; // do not use with ie6, does not work
+            }
         }
         var localOpts = $.extend(
             {}, // start with an empty map
