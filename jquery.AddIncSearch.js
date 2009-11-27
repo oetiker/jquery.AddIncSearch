@@ -138,31 +138,25 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             $this.empty().append($selected);
             
             // 
-            var $top_match = $('<option>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</option>').get(0);
-            var $no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').get(0);
-            
-            $top_match.disabled = true;
-            $no_match.disabled = true;
+            var top_match = $('<option>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</option>').attr('disabled', 'true').get(0);
+            var no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').attr('disabled', 'true').get(0);
             
             // overlay div to block events of select element
             var $blocker = $('<div/>');
             $blocker.css({
                 position: 'absolute',
                 width:  $this.outerWidth(),
-                height: $this.outerHeight()
-                /*
-                ,backgroundColor: '#FFFFFF'
-                ,opacity: 0.41
-                */
+                height: $this.outerHeight(),
+                backgroundColor: '#FFFFFF',
+                opacity: '0.01',
+                filter:  'Alpha(opacity=1)'
             });
             $blocker.appendTo($parent);
 
             // overlay text field for searching capability
             var $input = $('<input type="text"/>');
             $input.hide();
-            $input.appendTo($parent);
-            $input.width($this.outerWidth() - 22);
-            $input.height($this.outerHeight());
+            // copy selected styles to text field
             $input.css({
                 position: 'absolute',
                 borderLeftWidth: $this.css('border-left-width'),
@@ -178,9 +172,13 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 borderStyle: 'solid',
                 borderColor: 'transparent',
                 backgroundColor: 'transparent',
-                outlineStyle: 'none',
+                outlineStyle: 'none'
             });
-            
+
+            $input.appendTo($parent);
+            $input.width($this.outerWidth() - 22);
+            $input.height($this.outerHeight());
+
             // drop down replacement
             var chooserSize = Math.min(opt_cnt, 20);
             var $chooser = $('<select size="' + chooserSize + '"/>')
@@ -200,7 +198,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 $chooser.append(opt_arr[i]);
             }
             if(opt_arr.length > meta_opts.maxMultiMatch) {
-                $chooser.append($top_match);
+                $chooser.append(top_match);
             }
                         
             // get dom object of jquery $chooser
@@ -347,14 +345,14 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     $selected.text(cdom.options[0].text);
                 }
                 if (matches == 0){
-                    $chooser.append($no_match);
+                    $chooser.append(no_match);
                 }
                 else if (matches == 1 && opt_cnt < meta_opts.maxListSize){
                     $chooser.append(opt_arr);
                     cdom.selectedIndex = match_id;
                 }
                 else if (matches >= meta_opts.maxMultiMatch){
-                    $chooser.append($top_match);
+                    $chooser.append(top_match);
                 }
                 $chooser.show();
                 
@@ -411,7 +409,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                         }
                         break;
                     case 34: //pgdown
-                        if (cdom.options.length > cdom.selectedIndex + pg_step){
+                        if (cdom.selectedIndex + pg_step < cdom.options.length -1){
                             cdom.selectedIndex+=pg_step;
                         } else {
                             cdom.selectedIndex = cdom.options.length-1;
