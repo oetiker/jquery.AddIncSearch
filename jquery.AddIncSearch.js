@@ -142,7 +142,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             var $no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').get(0);
             
             $top_match.disabled = true;
-            $no_math.disabled = true;
+            $no_match.disabled = true;
             
             // overlay div to block events of select element
             var $blocker = $('<div/>');
@@ -347,7 +347,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     $selected.text(cdom.options[0].text);
                 }
                 if (matches == 0){
-                    $chooser.append($no_math);
+                    $chooser.append($no_match);
                 }
                 else if (matches == 1 && opt_cnt < meta_opts.maxListSize){
                     $chooser.append(opt_arr);
@@ -399,7 +399,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                         _.moveInputFocus($this,1);
                         break;
                     case 40: //down
-                        if (cdom.options.length > cdom.selectedIndex){
+                        if (cdom.selectedIndex < cdom.options.length-1){
                             cdom.selectedIndex++;
                             sync_select();
                         };
