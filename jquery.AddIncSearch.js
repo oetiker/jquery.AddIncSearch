@@ -220,18 +220,18 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
             // positioning
             var position = function () {
-                var offset = $this.offset();
+                var position = $this.position();
                 $chooser.css({
-                    top: offset.top+$this.outerHeight(),
-                    left: offset.left
+                    top: position.top+$this.outerHeight(),
+                    left: position.left
                 });
                 $input.css({
-                    top: offset.top,
-                    left: offset.left+2
+                    top: position.top,
+                    left: position.left+2
                 });
                 $blocker.css({
-                    top: offset.top,
-                    left: offset.left
+                    top: position.top,
+                    left: position.left
                 });
             };
             // fix positioning on window resize
