@@ -153,11 +153,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             var $empty_opt = $('<option value="_E_M_P_T_Y_"></option>');
             $select_tag.append($empty_opt); 
 
-            var $top_match_option = $('<div>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</div>')
+            var $top_match_div = $('<div>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</div>')
             .css({
                 color: '#bbb'
             });
-            var $no_match_option = $('<div>'+meta_opts.warnNoMatch+'</div>')
+            var $no_match_div = $('<div>'+meta_opts.warnNoMatch+'</div>')
             .css({
                 color: '#bbb'
             });                
@@ -369,7 +369,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     timer = null;
                     return true;
                 }
-//              $chooser.hide();
                 $chooser.xClear();
                 search_cache = search;
 				search = _.reEscape(search);
@@ -396,10 +395,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                         match_id = i;
                     }
                 };
-                if (matches == 0){
-                    $chooser.append($no_match_option);
-                }
-                else if (matches == 1 && opt_cnt < meta_opts.maxListSize){
+
+                if (matches == 1 && opt_cnt < meta_opts.maxListSize){
                     new_opts = '';
 					$chooser.xClear();
                     for(var i=0;i<opt_cnt;i++){
@@ -418,8 +415,12 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     $chooser.html(new_opts);
                     $chooser.xHiLite(0); 
                 }
+                else {
+                    $chooser.empty();
+                    $chooser.append($no_match_div);
+                }
                 if (matches >= meta_opts.maxMultiMatch){
-                    $chooser.append($top_match_option);
+                    $chooser.append($top_match_div);
                 }
                 $chooser.xClickify();
                 timer = null;
