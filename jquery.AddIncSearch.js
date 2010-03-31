@@ -5,7 +5,7 @@ Contributions from: Haggi <hagman@gmx.de>
 
 $Id$
 
-This jquery 1.3.x/1.4.x plugin adds incremental search to selectboxes of
+This jquery 1.3.x plugin adds incremental search to selectboxes of
 your choics.
 
 If you want to 'modify' selectboxes in your document, do the
@@ -106,7 +106,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 .find('button,input[type!=hidden],textarea,select')
 				.filter(':not(:hidden)');
             var index = $fields.index( jq );
-		    console.log('index: ' + index + ' dist: '+dist);
             if ( index > -1
                  && index + dist < $fields.length
                  && index + dist >= 0 ) {
@@ -220,7 +219,10 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 backgroundColor:  $select_tag.css('background-color'),
                 fontFamily: $select_tag.css('font-family'),
                 fontSize: $select_tag.css('font-size'),
-                cursor: 'pointer'
+                cursor: 'pointer',
+                MozUserSelect: 'none',
+                WebkitUserSelect: 'none',
+                userSelect: 'none'
             });
             
             $chooser.xClear = function(){
@@ -288,7 +290,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     (function(){  // local context to
                         var ii=i; // un-closure i as this gets executed NOW
                         $(id).click(function(){
-							console.log(id + ' ' + ii);
                             $chooser.xHiLite(ii);
                             input_hide(); // forward declarations seem fine in javascript
                         })						
@@ -350,6 +351,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             $chooser.mouseout(function(){
                 over_chooser = false;
             });
+
 			$chooser.click(function(e){
 			 	$input.focus();
                 e.stopPropagation();
@@ -498,7 +500,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     clearTimeout(timer);
                 
                 // start new timer      
-                timer = setTimeout(searcher, 100);
+                timer = setTimeout(searcher, 200);
             });
             
             // trigger keydown event for keyboard usage
