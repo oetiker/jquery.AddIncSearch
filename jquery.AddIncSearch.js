@@ -5,7 +5,7 @@ Contributions from: Haggi <hagman@gmx.de>
 
 $Id$
 
-This jquery 1.3.x plugin adds incremental search to selectboxes of
+This jquery 1.3.x/1.4.x plugin adds incremental search to selectboxes of
 your choics.
 
 If you want to 'modify' selectboxes in your document, do the
@@ -15,6 +15,8 @@ The behaviour of the widget can be tuned with the following options:
 
   maxListSize       if the total number of entries in the selectbox are
                     less than maxListSize, show them all
+
+  selectBoxHeight   height of the selectbox
 
   maxMultiMatch     if multiple entries match, how many should be displayed.
     
@@ -26,6 +28,12 @@ The behaviour of the widget can be tuned with the following options:
   zIndex            zIndex for the additional page elements
                     it should be higher than the index of the select boxes.
 
+To restore the normal operation of a selectbox, just cal
+
+ jquery("select").RemoveIncSearch();
+
+Example Document:
+
  <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
  <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
@@ -35,8 +43,8 @@ The behaviour of the widget can be tuned with the following options:
  <script type="text/javascript">
  jQuery(document).ready(function() {
     jQuery("select").AddIncSearch({
-        maxListSize: 200,
-        maxMultiMatch: 100,
+        maxListSize: 20,
+        maxMultiMatch: 50,
         warnMultiMatch: 'top {0} matches ...',
         warnNoMatch: 'no matches ...'
     });
@@ -76,30 +84,42 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         // let the user override the default
         // $.pluginPattern.defaultOptions.optA = false
         defaultOptions: {
-            maxListSize: 200,
-            maxMultiMatch: 100,
+            maxListSize: 20,
+            maxMultiMatch: 50,
             warnMultiMatch: 'top {0} matches ...',
             warnNoMatch: 'no matches ...',
+            selectBoxHeight: '30ex',
             zIndex: 'auto'
         }
     };
+    var reEscapeRe = new RegExp(
+      '(\\' +  [
+ 	     '/', '.', '*', '+', '?', '|',
+    	 '(', ')', '[', ']', '{', '}', '\\'
+      ].join('|\\') + ')', 'g'
+    );
 
     // Private Variables and Functions
     var _ = {
         moveInputFocus: function (jq,dist) {
-            var fields = jq.parents('form,body').eq(0)
-                .find('button,input[type!=hidden],textarea,select');
-            var index = fields.index( jq );
+            var $fields = jq.parents('form').eq(0)
+                .find('button,input[type!=hidden],textarea,select')
+				.filter(':not(:hidden)');
+            var index = $fields.index( jq );
+		    console.log('index: ' + index + ' dist: '+dist);
             if ( index > -1
-                 && index + dist < fields.length
+                 && index + dist < $fields.length
                  && index + dist >= 0 ) {
-                 fields.eq( index + dist ).focus();
+			     $fields.eq( index + dist ).focus();
                  return true;
             }
             else {
                  return false;
             }
         },
+		reEscape: function(text) {
+			return text.replace(reEscapeRe, '\\$1');
+		},
 
         action: function(options){
             
@@ -107,108 +127,180 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             if (this.nodeName != 'SELECT' || this.size > 1) {
                 return this;
             }
-
-            var $this = $(this);
-            var $parent = $this.parent();
+            
+            var select_tag = this;
+            var $select_tag = $(select_tag);
+            // do not run twice on the same select tag
+            if ($select_tag.data('AICelements')){                
+                return this;
+            };
+            var $parent = $select_tag.parent();
+//            if ($parent.css("position") == "static") {
+//                  $parent.css("position", "relative");
+//            }
+            
+            var idKey = 'AIS_'+Math.floor(1e10 * Math.random()).toString(36);
             var meta_opts = options;
             
             // lets you override the options
             // inside the dom objects class property
             // requires the jQuery metadata plugin
             // <div class="hello {color: 'red'}">ddd</div>
-            if ($.meta){
-                meta_opts = $.extend({}, options, $this.data());
-            }
 
-            var text_arr = [];
-            var opt_arr = [];
-            var opt_cnt = this.length;
-            var selectedIndex = this.selectedIndex; 
-            for (var i=0; i<opt_cnt;i++){
-                opt_arr[i] = this.options[i];
-                text_arr[i] = opt_arr[i].text.toLowerCase();
-            }
+            if ($.meta){
+                meta_opts = $.extend({}, options, $select_tag.data());
+            }            
             
-            var $selected = $(this.options[selectedIndex]).clone();
+            var $empty_opt = $('<option value="_E_M_P_T_Y_"></option>');
+            $select_tag.append($empty_opt); 
+
+            var $top_match_option = $('<div>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</div>')
+            .css({
+                color: '#bbb'
+            });
+            var $no_match_option = $('<div>'+meta_opts.warnNoMatch+'</div>')
+            .css({
+                color: '#bbb'
+            });                
             
-            // fix size of the list to whatever it was 'before'
-            $this.width($this.outerWidth());
-            $this.height($this.outerHeight());
-            
-            $this.empty().append($selected);
-            
-            // 
-            var top_match = $('<option>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</option>').attr('disabled', 'true').get(0);
-            var no_match = $('<option>'+meta_opts.warnNoMatch+'</option>').attr('disabled', 'true').get(0);
-            
-            // overlay div to block events of select element
-            var $blocker = $('<div/>');
-            $blocker.css({
+            // overlay div to block events from select element
+            var $blocker = $('<div/>')
+            .css({
                 position: 'absolute',
-                width:  $this.outerWidth(),
-                height: $this.outerHeight(),
+                width:  $select_tag.outerWidth(),
+                height: $select_tag.outerHeight(),
                 backgroundColor: '#FFFFFF',
                 opacity: '0.01',
                 filter:  'Alpha(opacity=1)'
-            });
-            $blocker.appendTo($parent);
+            })
+            .appendTo($parent);
 
             // overlay text field for searching capability
-            var $input = $('<input type="text"/>');
-            $input.hide();
+            var $input = $('<input type="text"/>')
+            .hide()
             // copy selected styles to text field
-            $input.css({
+            .addClass('addIncSearch')
+            .css({
                 position: 'absolute',
-                borderLeftWidth: $this.css('border-left-width'),
-                paddingLeft: $this.css('padding-left'),
-                borderTopWidth: $this.css('border-top-width'),
-                paddingTop: $this.css('padding-top'),
-                borderRightWidth: $this.css('border-right-width'),
-                paddingRight: $this.css('padding-right'),
-                borderBottomWidth: $this.css('border-bottom-width'),
-                paddingBottom: $this.css('padding-bottom'),
-                padding: 0,
-                margin: 0,
-                borderStyle: 'solid',
-                borderColor: 'transparent',
                 backgroundColor: 'transparent',
-                outlineStyle: 'none'
-            });
+                outlineStyle: 'none',
+                borderColor: 'transparent',
+                borderStyle: 'solid',
+                borderBottomWidth: $select_tag.css('border-bottom-width'),
+                borderLeftWidth: $select_tag.css('border-left-width'),
+                borderRightWidth: $select_tag.css('border-right-width'),
+                borderTopWidth: $select_tag.css('border-top-width'),
+                marginBottom: $select_tag.css('margin-bottom'),
+                marginLeft: $select_tag.css('margin-left'),
+                marginRight: $select_tag.css('margin-right'),
+                marginTop:  $select_tag.css('margin-top'),
+                paddingBottom: $select_tag.css('padding-bottom'),
+                paddingLeft: $select_tag.css('padding-left'),
+                paddingRight: $select_tag.css('padding-right'),
+                paddingTop: $select_tag.css('padding-top')
+            })
+            .width($select_tag.innerWidth())
+            .height($select_tag.innerHeight())
+            .appendTo($parent);
 
-            $input.appendTo($parent);
-            $input.width($this.outerWidth() - 22);
-            $input.height($this.outerHeight());
+            // create a neat little drop down replacement
 
-            // drop down replacement
-            var chooserSize = Math.min(opt_cnt, 20);
-            var $chooser = $('<select size="' + chooserSize + '"/>')
-            $chooser.hide();
-            $chooser.css({
+            var $chooser = $('<div/>')
+            .addClass('AddIncSearchChooser')
+            .hide()
+            .css({
                 position: 'absolute',
-                width:  $this.outerWidth()
+                height: meta_opts.selectBoxHeight.toString(),
+                width:  $select_tag.outerWidth()-6,
+                overflow: 'auto',
+                borderColor: '#000',
+                borderStyle: 'solid',
+                borderWidth: '1px',
+                padding: '2px',
+                backgroundColor:  $select_tag.css('background-color'),
+                fontFamily: $select_tag.css('font-family'),
+                fontSize: $select_tag.css('font-size'),
+                cursor: 'pointer'
             });
             
-            // default entries depends on selectedIndex
-            // of the source select object and maxMultiMatch count
-            var mc = Math.floor(meta_opts.maxMultiMatch / 2);
-            var st = Math.max(0, (selectedIndex - mc));
-            var len = Math.min(opt_arr.length, (selectedIndex + mc));
-            var si = selectedIndex == 0 ? selectedIndex : (len - selectedIndex);
-            for (var i=st; i < len; i++) {
-                $chooser.append(opt_arr[i]);
-            }
-            if(opt_arr.length > meta_opts.maxMultiMatch) {
-                $chooser.append(top_match);
-            }
-                        
+            $chooser.xClear = function(){
+                this.xIdArr = [];
+                this.xCurrentRow = null;
+            };
+            $chooser.xHiLite = function(row){
+                if (this.xCurrentRow != null){
+                    $('#' + idKey + this.xIdArr[this.xCurrentRow].toString(36)).css({
+                        color: $select_tag.css('color'),
+                        backgroundColor:  'transparent',
+                    })
+                }
+                if (row >= this.xIdArr.length){
+                    row = this.xIdArr.length -1;
+                }
+                else if (row < 0){
+                    row = 0;
+                }
+                var $el = $('#' + idKey + this.xIdArr[row].toString(36)).css({
+                    color: '#fff',
+                    backgroundColor: '#444'
+                })
+                var el = $el.get(0);
+                if (el){
+                    var top = $el.position().top;
+                    var scroll = $chooser.scrollTop();
+                    var elheight = $el.height();                    
+                    var cheight = $chooser.height()-elheight;
+                    if (top >= cheight){
+                        $chooser.scrollTop(scroll + top - cheight + elheight );
+                    }
+                    else if (top < 0){
+                        $chooser.scrollTop(scroll + top);
+                    }
+                }
+                this.xCurrentRow = row;                
+            };
+            $chooser.xNextRow = function(){
+                if (this.xCurrentRow < this.xIdArr.length - 1){
+                    this.xHiLite(this.xCurrentRow+1);
+                }
+            };
+            $chooser.xPrevRow = function(){
+                if (this.xCurrentRow > 0){
+                    this.xHiLite(this.xCurrentRow-1);
+                }
+            };
+            $chooser.xNextPage = function(){
+                if (this.xCurrentRow < this.xIdArr.length - 1){
+                    this.xHiLite(this.xCurrentRow+5);
+                }
+            };
+            $chooser.xPrevPage = function(){
+                if (this.xCurrentRow > 0){
+                    this.xHiLite(this.xCurrentRow-5);
+                }
+            };
+
+            $chooser.xClear();
+
+            $chooser.xClickify = function(){
+                for (var i=0;i<this.xIdArr.length;i++){                    
+					var id = '#' + idKey + this.xIdArr[i].toString(36);
+                    (function(){  // local context to
+                        var ii=i; // un-closure i as this gets executed NOW
+                        $(id).click(function(){
+							console.log(id + ' ' + ii);
+                            $chooser.xHiLite(ii);
+                            input_hide(); // forward declarations seem fine in javascript
+                        })						
+                    })();
+                }
+            };
+
             // get dom object of jquery $chooser
-            var cdom = $chooser.get(0);
+            var chooser = $chooser.get(0);
             
-            // set default selected index
-            cdom.selectedIndex = si;
-                        
             // z-index handling
-            var zIndex = /^\d+$/.test($this.css("z-index")) ? $this.css("z-index") : 1;
+            var zIndex = /^\d+$/.test($select_tag.css("z-index")) ? $select_tag.css("z-index") : 1;
             // if z-index option is defined, use it instead of select box z-index
             if (meta_opts.zIndex && /^\d+$/.test(meta_opts.zIndex))
                 zIndex = meta_opts.zIndex;
@@ -219,11 +311,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             $chooser.appendTo($parent);
 
             // positioning
-            var position = function () {
-                var position = $this.position();
+            function position_update() {
+                var position = $select_tag.position();
                 $chooser.css({
-                    top: position.top+$this.outerHeight(),
-                    left: position.left
+                    top: position.top+$select_tag.outerHeight()+2,
+                    left: position.left+2
                 });
                 $input.css({
                     top: position.top,
@@ -234,12 +326,13 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     left: position.left
                 });
             };
+
             // fix positioning on window resize
-            $this.resize(position);
-            $(window).resize(position);
+            $select_tag.resize(position_update);
+            $(window).resize(position_update);
 
             // set initial position
-            position();
+            position_update();
             
             // track mouse movement
             var over_blocker = false;
@@ -249,6 +342,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             $blocker.mouseout(function(){
                 over_blocker = false;
             });
+
             var over_chooser = false;
             $chooser.mouseover(function(){
                 over_chooser = true;
@@ -256,183 +350,195 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             $chooser.mouseout(function(){
                 over_chooser = false;
             });
-
-            // show dropdown replacement
-            function input_show(){
-                $selected.remove();
-                if ($selected.val() != ''){
-                    $input.val($selected.text());
-                }
-                $input.show();
-                $chooser.show();
-            };
-
-            // hide dropdown replacement
-            function input_hide(){
-                $this.append($selected);
-                $this.change();
-                $input.hide();
-                $chooser.hide();
-            };
-            
-            // toggle click event on blocker div
-            $blocker.toggle(
-                function(e) {
-                    // exit event on disabled select object
-                    if($this.attr("disabled")) 
-                        return false;
-                    input_show();
-                    $input.focus();
-                    $input.select();
-                    e.stopPropagation();
-                },
-                function(e) {
-                    input_hide();
-                    e.stopPropagation();
-                }
-            );
-            
-            // add click event on chooser
-            $chooser.click(function(e) {
+			$chooser.click(function(e){
+			 	$input.focus();
                 e.stopPropagation();
-                if (cdom.selectedIndex < 0)
-                    return;
-                sync_select();
-                $blocker.click();
-            });
-
-            // trigger focus / blur
-            $this.focus(function(){
-                $blocker.click();
-            });
-            $chooser.focus(function(){
-                over_chooser = true;
-            });
-            $input.blur(function() {
-                if (!over_blocker && !over_chooser) {
-                    $blocker.click();
-                }
-            });
-
-            var timer = null;
-            var search_cache;
+			});
+            var last_selected;
             var search;
+            var search_cache;
+            var timer = null;
 
             // the actual searching gets done here
             // to not block input, we get called
             // with a timer
             function searcher() {
-                var matches = 0;
                 if (search_cache == search){ // no change ...
                     timer = null;
                     return true;
                 }
-
+//              $chooser.hide();
+                $chooser.xClear();
                 search_cache = search;
-                $chooser.hide();
-                $chooser.empty();
+				search = _.reEscape(search);
                 var match_id;
+                var matches = 0;
+                var opt_cnt = select_tag.length;
+                var opt_arr = select_tag.options;
+                // some regexp engines go slow when matching with
+                // capturing enabled ... so lets not do that for the first
+                // round
+                var matcher_quick = new RegExp(search,'i');
+                var matcher = new RegExp('(.*?)('+search+')(.*)','i');
+                var new_opts = '';
+                chooser_arr = [];
+                var cap;
+				var last_match;
                 for(var i=0;i<opt_cnt && matches < meta_opts.maxMultiMatch;i++){
-                    if(search == '' || text_arr[i].indexOf(search,0) >= 0){
+                    if (matcher_quick.test(opt_arr[i].text)){
+                        cap = matcher.exec(opt_arr[i].text)
                         matches++;
-                        $chooser.append(opt_arr[i]);
+                        $chooser.xIdArr.push(i);
+                        last_match = '<div id="'+idKey + i.toString(36)+'">'+cap[1]+'<b>'+cap[2]+'</b>'+cap[3]+'</div>';
+						new_opts += last_match;
                         match_id = i;
                     }
                 };
-                if (matches >= 1){
-                    cdom.selectedIndex = 0;
-                    $selected.val(cdom.options[0].value);
-                    $selected.text(cdom.options[0].text);
-                }
                 if (matches == 0){
-                    $chooser.append(no_match);
+                    $chooser.append($no_match_option);
                 }
                 else if (matches == 1 && opt_cnt < meta_opts.maxListSize){
-                    $chooser.append(opt_arr);
-                    cdom.selectedIndex = match_id;
+                    new_opts = '';
+					$chooser.xClear();
+                    for(var i=0;i<opt_cnt;i++){
+                        $chooser.xIdArr.push(i);
+						if (i == match_id){
+							new_opts += last_match;
+						}
+						else {
+	                        new_opts += '<div id="'+idKey + i.toString(36)+'">'+opt_arr[i].text+'</div>';
+						}
+                    }
+                    $chooser.html(new_opts);
+                    $chooser.xHiLite(match_id);
                 }
-                else if (matches >= meta_opts.maxMultiMatch){
-                    $chooser.append(top_match);
+                else if (matches >= 1){
+                    $chooser.html(new_opts);
+                    $chooser.xHiLite(0); 
                 }
-                $chooser.show();
-                
+                if (matches >= meta_opts.maxMultiMatch){
+                    $chooser.append($top_match_option);
+                }
+                $chooser.xClickify();
                 timer = null;
             };
+			            
+
+            // show dropdown replacement
+            function input_show(){
+                last_selected = select_tag.selectedIndex;
+                select_tag.selectedIndex = select_tag.length;
+                search = '';
+                search_cache = 'dymmy';
+                if (last_selected){                    
+                    search = select_tag.options[last_selected].text;
+                    $input.val(search);
+                }
+                $input.show();
+                $input.focus();
+                $input.select();
+                $chooser.show();
+                timer = setTimeout(searcher, 100);
+            };
+
+            // hide dropdown replacement
+            function input_hide(){
+                $input.hide();
+                if ($chooser.xCurrentRow != null){
+                    select_tag.selectedIndex = $chooser.xIdArr[$chooser.xCurrentRow]
+                }
+                else {
+                    select_tag.selectedIndex = last_selected;
+                }
+                $chooser.hide();
+				$chooser.empty();
+            };
             
+            $blocker.click(
+                function(e) {
+                    // exit event on disabled select object
+                    if($select_tag.attr("disabled"))
+                        return false;
+                    input_show();
+                    e.stopPropagation();
+                }
+            );
+            
+            // trigger focus / blur
+            // use namespaceing to later unbind the
+            // events we added
+            $select_tag.bind('focus.AIC',function(e){
+                e.stopPropagation();
+                input_show();
+            });
+            $select_tag.bind('click.AIC',function(e){
+                e.stopPropagation();
+                input_show();
+            });
+
+            $input.blur(function(e) {
+                if (!over_blocker && !over_chooser) {
+                    input_hide();
+					return true;
+                }
+				return false;
+            });
+
             // trigger event keyup
-            $input.keyup(function(e) {
-                
+            $input.keyup(function(e) {                
                 // break searching while using navigation keys
                 if($.inArray(e.keyCode, new Array(9, 13, 40, 38, 34, 33)) > 0)
                     return true;
                 
                 // set search text
-                search = $.trim($input.val().toLowerCase());
+                search = $.trim($input.val());
                 
                 // if a previous time is running, stop it
                 if (timer != null)
                     clearTimeout(timer);
                 
                 // start new timer      
-                timer = setTimeout(searcher, 0);
+                timer = setTimeout(searcher, 100);
             });
             
-            // synchronize selected item on dropdown replacement and source select object
-            function sync_select(){
-                $selected = $(cdom.options[cdom.selectedIndex]).clone();
-            };
-
             // trigger keydown event for keyboard usage
-            var pg_step = cdom.size;
-            $input.keydown(function(e) {
+            var pg_step = chooser.size;
+            
+            function handleKeyDown(e) {
                 switch(e.keyCode) {
-                    case 9:
-                        $input.blur();
-                        $chooser.blur();
-                        _.moveInputFocus($this,e.shiftKey ? -1 : 1);
+                    case 9: // tab
+                        input_hide();
+                        _.moveInputFocus($select_tag,e.shiftKey ? -1 : 1);
                         break;
                     case 13:  //enter
-                        $input.blur();
-                        $chooser.blur();
-                        _.moveInputFocus($this,1);
+                        input_hide();
+                        _.moveInputFocus($select_tag,1);
                         break;
                     case 40: //down
-                        if (cdom.selectedIndex < cdom.options.length-1){
-                            cdom.selectedIndex++;
-                            sync_select();
-                        };
+                        $chooser.xNextRow();
                         break;
                     case 38: //up
-                        if (cdom.selectedIndex > 0){
-                            cdom.selectedIndex--;
-                            sync_select();
-                        }
+                        $chooser.xPrevRow();
                         break;
                     case 34: //pgdown
-                        if (cdom.selectedIndex + pg_step < cdom.options.length -1){
-                            cdom.selectedIndex+=pg_step;
-                        } else {
-                            cdom.selectedIndex = cdom.options.length-1;
-                        }
-                        sync_select();
+                        $chooser.xNextPage();
                         break;
                     case 33: //pgup
-                        if (cdom.selectedIndex - pg_step > 0){
-                            cdom.selectedIndex-=pg_step;
-                        } else {
-                            cdom.selectedIndex = 0;
-                        }
-                        sync_select();
-                        break;
+                        $chooser.xPrevPage();
+                        break;                    
                     default:
                         return true;
                 }
                 // we handled the key. stop
                 // doing anything with it!
+                e.stopPropagation();
                 return false;
-            });
+            };
+            $input.keydown(handleKeyDown);
 
-            return;
+            // save the tags in case we want to  kill them later
+            $select_tag.data('AICelements',[$chooser,$blocker,$input,$empty_opt]);
+            return this;
         }
     };
 
@@ -452,7 +558,21 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         // action would be running in the _ context
         return this.each(function(){_.action.call(this,localOpts)});
     };
-
+    $.fn.RemoveIncSearch = function(){
+        return this.each(function(){
+            var $this = $(this);
+            var helpers = $this.data('AICelements');
+            if (helpers){
+                for (var i=0; i < helpers.length;i++){
+                    // empty first seems faster
+                    helpers[i].empty().remove();
+                }
+                $this.removeData('AICelements');
+                $this.unbind('click.AIC');
+                $this.unbind('focus.AIC');
+            }
+        });
+    };                
 })(jQuery);
 
 /* EOF */
