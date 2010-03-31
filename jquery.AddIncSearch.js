@@ -501,7 +501,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     clearTimeout(timer);
                 
                 // start new timer      
-                timer = setTimeout(searcher, 200);
+                timer = setTimeout(searcher, 100);
             });
             
             // trigger keydown event for keyboard usage
