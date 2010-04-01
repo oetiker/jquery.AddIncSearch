@@ -205,7 +205,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 height: meta_opts.selectBoxHeight.toString(),
                 width:  $select_tag.outerWidth()-6,
                 overflow: 'auto',
-                borderColor: '#000',
+                borderColor:  $select_tag.css('border-color'),
                 borderStyle: 'solid',
                 borderWidth: '1px',
                 padding: '2px',
@@ -215,7 +215,9 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 cursor: 'pointer',
                 MozUserSelect: 'none',
                 WebkitUserSelect: 'none',
-                userSelect: 'none'
+                userSelect: 'none',
+                boxShadow: '3px 3px 5px #bbb',
+                MozBoxShadow: '3px 3px 10px #bbb' 
             });
             
             $chooser.xClear = function(){
