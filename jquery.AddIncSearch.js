@@ -92,13 +92,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             zIndex: 'auto'
         }
     };
-    var reEscapeRe = new RegExp(
-      '(\\' +  [
- 	     '/', '.', '*', '+', '?', '|',
-    	 '(', ')', '[', ']', '{', '}', '\\'
-      ].join('|\\') + ')', 'g'
-    );
-
     // Private Variables and Functions
     var _ = {
         moveInputFocus: function (jq,dist) {
@@ -117,7 +110,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             }
         },
 		reEscape: function(text) {
-			return text.replace(reEscapeRe, '\\$1');
+            return text.replace(/([.*+?^${}()|[\]\/\\])/g, '\\$1');
 		},
 
         action: function(options){
@@ -199,7 +192,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 paddingTop: $select_tag.css('padding-top')
             })
             .width($select_tag.innerWidth())
-            .height($select_tag.innerHeight())
+            .height($select_tag.outerHeight())
             .appendTo($parent);
 
             // create a neat little drop down replacement
@@ -233,7 +226,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 if (this.xCurrentRow != null){
                     $('#' + idKey + this.xIdArr[this.xCurrentRow].toString(36)).css({
                         color: $select_tag.css('color'),
-                        backgroundColor:  'transparent',
+                        backgroundColor:  'transparent'
                     })
                 }
                 if (row >= this.xIdArr.length){
@@ -382,7 +375,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 var matcher_quick = new RegExp(search,'i');
                 var matcher = new RegExp('(.*?)('+search+')(.*)','i');
                 var new_opts = '';
-                chooser_arr = [];
                 var cap;
 				var last_match;
                 for(var i=0;i<opt_cnt && matches < meta_opts.maxMultiMatch;i++){
@@ -390,7 +382,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                         cap = matcher.exec(opt_arr[i].text)
                         matches++;
                         $chooser.xIdArr.push(i);
-                        last_match = '<div id="'+idKey + i.toString(36)+'">'+cap[1]+'<b>'+cap[2]+'</b>'+cap[3]+'</div>';
+                        last_match = '<div id="'+idKey + i.toString(36)+'">'+cap[1]+'<span style="background-color: #8f8; color: #000;">'+cap[2]+'</span>'+cap[3]+'</div>';
 						new_opts += last_match;
                         match_id = i;
                     }
