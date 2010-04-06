@@ -217,7 +217,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 WebkitUserSelect: 'none',
                 userSelect: 'none',
                 boxShadow: '3px 3px 5px #bbb',
-                MozBoxShadow: '3px 3px 10px #bbb' 
+                MozBoxShadow: '3px 3px 5px #bbb',
+                WebkitBoxShadow: '3px 3px 5px #bbb',
             });
             
             $chooser.xClear = function(){
@@ -443,6 +444,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 $input.hide();
                 if ($chooser.xCurrentRow != null){
                     select_tag.selectedIndex = $chooser.xIdArr[$chooser.xCurrentRow]
+                    $select_tag.change();
                 }
                 else {
                     select_tag.selectedIndex = last_selected;
