@@ -429,7 +429,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 select_tag.selectedIndex = select_tag.length;
                 search = '';
                 search_cache = 'dymmy';
-                if (last_selected){                    
+                if (last_selected != undefined && last_selected >= 0){                    
                     search = select_tag.options[last_selected].text;
                     $input.val(search);
                 }
