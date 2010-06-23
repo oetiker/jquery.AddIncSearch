@@ -50,6 +50,7 @@ Example Document:
     });
  });
  </script>
+ </head>
  <body>
  <form>
    <select>
