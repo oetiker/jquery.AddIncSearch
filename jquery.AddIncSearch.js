@@ -219,7 +219,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 userSelect: 'none',
                 boxShadow: '3px 3px 5px #bbb',
                 MozBoxShadow: '3px 3px 5px #bbb',
-                WebkitBoxShadow: '3px 3px 5px #bbb',
+                WebkitBoxShadow: '3px 3px 5px #bbb'
             });
             
             $chooser.xClear = function(){
