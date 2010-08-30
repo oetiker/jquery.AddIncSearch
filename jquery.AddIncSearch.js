@@ -206,7 +206,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 height: meta_opts.selectBoxHeight.toString(),
                 width:  $select_tag.outerWidth()-6,
                 overflow: 'auto',
-                borderColor:  $select_tag.css('border-color'),
+                borderColor:  $select_tag.css('border-color') || '#000',
                 borderStyle: 'solid',
                 borderWidth: '1px',
                 padding: '2px',
