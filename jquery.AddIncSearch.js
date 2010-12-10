@@ -97,8 +97,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     var _ = {
         moveInputFocus: function (jq,dist) {
             var $fields = jq.parents('form').eq(0)
-                .find('button,input[type!=hidden],textarea,select')
-				.filter(':not(:hidden)');
+                .find('button:visible,input:visible,textarea:visible,select:visible')
             var index = $fields.index( jq );
             if ( index > -1
                  && index + dist < $fields.length
@@ -110,11 +109,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                  return false;
             }
         },
-		reEscape: function(text) {
+	reEscape: function(text) {
             return text.replace(/([.*+?^${}()|[\]\/\\])/g, '\\$1');
-		},
+	},
 
-        action: function(options){
+        action: function(options,idx){
             
             // only active select objects with drop down capability
             if (this.nodeName != 'SELECT' || this.size > 1) {
@@ -283,7 +282,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
             $chooser.xClickify = function(){
                 for (var i=0;i<this.xIdArr.length;i++){                    
-					var id = '#' + idKey + this.xIdArr[i].toString(36);
+                    var id = '#' + idKey + this.xIdArr[i].toString(36);
                     (function(){  // local context to
                         var ii=i; // un-closure i as this gets executed NOW
                         $(id).click(function(){
@@ -349,10 +348,10 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 over_chooser = false;
             });
 
-			$chooser.click(function(e){
-			 	$input.focus();
+            $chooser.click(function(e){
+	        $input.focus();
                 e.stopPropagation();
-			});
+            });
             var last_selected;
             var search;
             var search_cache;
@@ -442,7 +441,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
             // hide dropdown replacement
             function input_hide(){
-                $input.hide();
                 if ($chooser.xCurrentRow != null){
                     select_tag.selectedIndex = $chooser.xIdArr[$chooser.xCurrentRow]
                     $select_tag.change();
@@ -450,8 +448,9 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 else {
                     select_tag.selectedIndex = last_selected;
                 }
+                $input.hide();
                 $chooser.hide();
-				$chooser.empty();
+		$chooser.empty();
             };
             
             $blocker.click(
@@ -468,20 +467,21 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             // use namespaceing to later unbind the
             // events we added
             $select_tag.bind('focus.AIC',function(e){
-                e.stopPropagation();
-                input_show();
+   	    	e.preventDefault();
+    	        input_show();
             });
             $select_tag.bind('click.AIC',function(e){
-                e.stopPropagation();
+ 	        e.preventDefault();
                 input_show();
             });
 
             $input.blur(function(e) {
                 if (!over_blocker && !over_chooser) {
                     input_hide();
-					return true;
+                    return true;
                 }
-				return false;
+		return false;
+		e.stopPropagation();
             });
 
             // trigger event keyup
@@ -556,7 +556,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         );
         // take care to pass on the context. without the call
         // action would be running in the _ context
-        return this.each(function(){_.action.call(this,localOpts)});
+        return this.each(function(idx){_.action.call(this,localOpts,idx)});
     };
     $.fn.RemoveIncSearch = function(){
         return this.each(function(){
