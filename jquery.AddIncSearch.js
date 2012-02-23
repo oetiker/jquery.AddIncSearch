@@ -78,10 +78,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 * *******************************************************************/
 (function($) {
-    // setup a namespace for us
-    var nsp = 'AddIncSearch';
 
-    $[nsp] = {
+    $.AddIncSearch = {
         // let the user override the default
         // $.pluginPattern.defaultOptions.optA = false
         defaultOptions: {
@@ -89,7 +87,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             maxMultiMatch: 50,
             warnMultiMatch: 'top {0} matches ...',
             warnNoMatch: 'no matches ...',
-            selectBoxHeight: '30ex',
+            selectBoxHeight: null,
+            chooserBoxMinWidth: 200,
             zIndex: 'auto'
         }
     };
@@ -125,7 +124,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             // do not run twice on the same select tag
             if ($select_tag.data('AICelements')){                
                 return this;
-            };
+            }
             var $parent = $select_tag.parent();
 //            if ($parent.css("position") == "static") {
 //                  $parent.css("position", "relative");
@@ -142,9 +141,9 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             if ($.meta){
                 meta_opts = $.extend({}, options, $select_tag.data());
             }            
-            
-            var $empty_opt = $('<option value="_E_M_P_T_Y_"></option>');
-            $select_tag.append($empty_opt); 
+//
+//            var $empty_opt = $('<option value="_E_M_P_T_Y_"></option>');
+//            $select_tag.append($empty_opt);
 
             var $top_match_div = $('<div>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</div>')
             .css({
@@ -187,61 +186,46 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 marginRight: $select_tag.css('margin-right'),
                 marginTop:  $select_tag.css('margin-top'),
                 paddingBottom: $select_tag.css('padding-bottom'),
-                paddingLeft: $select_tag.css('padding-left'),
+                paddingLeft: parseInt($select_tag.css('padding-left'),10) + 7,
                 paddingRight: $select_tag.css('padding-right'),
-                paddingTop: $select_tag.css('padding-top')
+                paddingTop: $select_tag.css('padding-top'),
+                fontFamily: $select_tag.css('font-family'),
+                fontSize: $select_tag.css('font-size')
             })
-            .width($select_tag.innerWidth())
+            .width($select_tag.innerWidth() - 7)
             .height($select_tag.outerHeight())
             .appendTo($parent);
 
             // create a neat little drop down replacement
-
             var $chooser = $('<div/>')
             .addClass('AddIncSearchChooser')
             .hide()
             .css({
                 position: 'absolute',
-                height: meta_opts.selectBoxHeight.toString(),
-                width:  $select_tag.outerWidth()-6,
+                maxHeight: meta_opts.selectBoxHeight ? meta_opts.selectBoxHeight.toString() + 'px' : 'inherit',
+                width:  $select_tag.outerWidth() < meta_opts.chooserBoxMinWidth ? meta_opts.chooserBoxMinWidth : $select_tag.outerWidth(),
                 overflow: 'auto',
-                borderColor:  $select_tag.css('border-color') || '#000',
-                borderStyle: 'solid',
-                borderWidth: '1px',
-                padding: '2px',
-                backgroundColor:  $select_tag.css('background-color'),
                 fontFamily: $select_tag.css('font-family'),
-                fontSize: $select_tag.css('font-size'),
-                cursor: 'pointer',
-                MozUserSelect: 'none',
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
-                boxShadow: '3px 3px 5px #bbb',
-                MozBoxShadow: '3px 3px 5px #bbb',
-                WebkitBoxShadow: '3px 3px 5px #bbb'
+                fontSize: $select_tag.css('font-size')
             });
-            
+
             $chooser.xClear = function(){
                 this.xIdArr = [];
                 this.xCurrentRow = null;
             };
             $chooser.xHiLite = function(row){
                 if (this.xCurrentRow != null){
-                    $('#' + idKey + this.xIdArr[this.xCurrentRow].toString(36)).css({
-                        color: $select_tag.css('color'),
-                        backgroundColor:  'transparent'
-                    })
+                    $('#' + idKey + this.xIdArr[this.xCurrentRow].toString(36)).removeClass('xHiLite');
                 }
+            
                 if (row >= this.xIdArr.length){
                     row = this.xIdArr.length -1;
                 }
                 else if (row < 0){
                     row = 0;
                 }
-                var $el = $('#' + idKey + this.xIdArr[row].toString(36)).css({
-                    color: '#fff',
-                    backgroundColor: '#444'
-                })
+                var $el = $('#' + idKey + this.xIdArr[row].toString(36)).addClass('xHiLite');
+            
                 var el = $el.get(0);
                 if (el){
                     var top = $el.position().top;
@@ -281,14 +265,16 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             $chooser.xClear();
 
             $chooser.xClickify = function(){
-                for (var i=0;i<this.xIdArr.length;i++){                    
+                for (var i=0;i<this.xIdArr.length;i++){
                     var id = '#' + idKey + this.xIdArr[i].toString(36);
                     (function(){  // local context to
                         var ii=i; // un-closure i as this gets executed NOW
                         $(id).click(function(){
                             $chooser.xHiLite(ii);
                             input_hide(); // forward declarations seem fine in javascript
-                        })						
+                        }).mouseover(function(){
+                            $chooser.xHiLite(ii);
+                        });
                     })();
                 }
             };
@@ -311,18 +297,18 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             function position_update() {
                 var position = $select_tag.position();
                 $chooser.css({
-                    top: position.top+$select_tag.outerHeight()+2,
-                    left: position.left+2
+                    top: position.top+$select_tag.outerHeight() + 2,
+                    left: position.left
                 });
                 $input.css({
-                    top: position.top,
-                    left: position.left+2
+                    top: position.top-2,
+                    left: position.left
                 });
                 $blocker.css({
                     top: position.top,
                     left: position.left
                 });
-            };
+            }
 
             // fix positioning on window resize
             $select_tag.resize(position_update);
@@ -363,7 +349,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             function searcher() {
                 if (search_cache == search){ // no change ...
                     timer = null;
-                    return true;
+                    return;
                 }
                 $chooser.xClear();
                 search_cache = search;
@@ -382,14 +368,14 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 				var last_match;
                 for(var i=0;i<opt_cnt && matches < meta_opts.maxMultiMatch;i++){
                     if (matcher_quick.test(opt_arr[i].text)){
-                        cap = matcher.exec(opt_arr[i].text)
+                        cap = matcher.exec(opt_arr[i].text);
                         matches++;
                         $chooser.xIdArr.push(i);
-                        last_match = '<div id="'+idKey + i.toString(36)+'">'+cap[1]+'<span style="background-color: #8f8; color: #000;">'+cap[2]+'</span>'+cap[3]+'</div>';
+                        last_match = '<div id="'+idKey + i.toString(36)+'">'+cap[1]+'<span>'+cap[2]+'</span>'+cap[3]+'&nbsp;</div>';
 						new_opts += last_match;
                         match_id = i;
                     }
-                };
+                }
 
                 if (matches == 1 && opt_cnt < meta_opts.maxListSize){
                     new_opts = '';
@@ -400,7 +386,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 							new_opts += last_match;
 						}
 						else {
-	                        new_opts += '<div id="'+idKey + i.toString(36)+'">'+opt_arr[i].text+'</div>';
+	                        new_opts += '<div id="'+idKey + i.toString(36)+'">'+opt_arr[i].text+'&nbsp;</div>';
 						}
                     }
                     $chooser.html(new_opts);
@@ -408,7 +394,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 }
                 else if (matches >= 1){
                     $chooser.html(new_opts);
-                    $chooser.xHiLite(0); 
+                    $chooser.xHiLite(0);
                 }
                 else {
                     $chooser.empty();
@@ -419,8 +405,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 }
                 $chooser.xClickify();
                 timer = null;
-            };
-			            
+            }
+
 
             // show dropdown replacement
             function input_show(){
@@ -437,12 +423,12 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 $input.select();
                 $chooser.show();
                 timer = setTimeout(searcher, 100);
-            };
+            }
 
             // hide dropdown replacement
             function input_hide(){
                 if ($chooser.xCurrentRow != null){
-                    select_tag.selectedIndex = $chooser.xIdArr[$chooser.xCurrentRow]
+                    select_tag.selectedIndex = $chooser.xIdArr[$chooser.xCurrentRow];
                     $select_tag.change();
                 }
                 else {
@@ -453,8 +439,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         	    $chooser.empty();
                 over_blocker = false;
                 over_chooser = false;
-            };
-            
+            }
+
             $blocker.click(
                 function(e) {
                     // exit event on disabled select object
@@ -482,8 +468,8 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                     input_hide();
                     return true;
                 }
-		return false;
-		e.stopPropagation();
+                e.stopPropagation();
+                return false;
             });
 
             // trigger event keyup
@@ -516,6 +502,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                         input_hide();
                         _.moveInputFocus($select_tag,1);
                         break;
+                    case 27: //escape
+                        $chooser.xCurrentRow = null;
+                        input_hide();
+            
+                        break;
                     case 40: //down
                         $chooser.xNextRow();
                         break;
@@ -535,16 +526,16 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 // doing anything with it!
                 e.stopPropagation();
                 return false;
-            };
+            }
             $input.keydown(handleKeyDown);
 
             // save the tags in case we want to  kill them later
-            $select_tag.data('AICelements',[$chooser,$blocker,$input,$empty_opt]);
+            $select_tag.data('AICelements',[$chooser,$blocker,$input]);
             return this;
         }
     };
 
-    $.fn[nsp] = function(options) {
+    $.fn.AddIncSearch = function(options) {
         if ($.browser.msie){
             var bvers = (parseInt($.browser.version));
             if (bvers < 7) {
@@ -553,7 +544,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         }
         var localOpts = $.extend(
             {}, // start with an empty map
-            $[nsp].defaultOptions, // add defaults
+            $.AddIncSearch.defaultOptions, // add defaults
             options // add options
         );
         // take care to pass on the context. without the call
