@@ -24,7 +24,7 @@
     /*userSelect: 'none'*/
 
 }
-.AddIncSearchChooser div{padding:2px 7px; font-weight: normal; border-bottom:1px solid #dadfe0;}
+.AddIncSearchChooser div{padding:2px 7px; font-weight: normal; border-bottom:1px solid #dadfe0; text-align: left}
 .AddIncSearchChooser div:nth-child(even){background:#f6f6f6;}
 .AddIncSearchChooser div span{font-weight: bold;}
 .AddIncSearchChooser div.xHiLite{background:#fcf5dd;}
