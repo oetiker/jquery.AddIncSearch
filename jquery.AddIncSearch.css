@@ -1,4 +1,9 @@
-
+.addIncSearch:focus{
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none);
+    outline: 0;
+}
 .AddIncSearchChooser{
     background: #fff;
     border: 1px solid #bbb;
