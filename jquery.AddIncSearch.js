@@ -96,7 +96,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     var _ = {
         moveInputFocus: function (jq,dist) {
             var $fields = jq.parents('form').eq(0)
-                .find('button:visible,input:visible,textarea:visible,select:visible')
+                .find('button:visible,input:visible,textarea:visible,select:visible');
             var index = $fields.index( jq );
             if ( index > -1
                  && index + dist < $fields.length
@@ -366,7 +366,9 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 var new_opts = '';
                 var cap;
 				var last_match;
-                for(var i=0;i<opt_cnt && matches < meta_opts.maxMultiMatch;i++){
+                var i;
+
+                for(i=0;i<opt_cnt && matches < meta_opts.maxMultiMatch;i++){
                     if (matcher_quick.test(opt_arr[i].text)){
                         cap = matcher.exec(opt_arr[i].text);
                         matches++;
@@ -380,7 +382,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
                 if (matches == 1 && opt_cnt < meta_opts.maxListSize){
                     new_opts = '';
 					$chooser.xClear();
-                    for(var i=0;i<opt_cnt;i++){
+                    for(i=0;i<opt_cnt;i++){
                         $chooser.xIdArr.push(i);
 						if (i == match_id){
 							new_opts += last_match;
@@ -475,7 +477,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             // trigger event keyup
             $input.keyup(function(e) {                
                 // break searching while using navigation keys
-                if($.inArray(e.keyCode, new Array(9, 13, 40, 38, 34, 33)) > 0)
+                if($.inArray(e.keyCode, [9, 13, 40, 38, 34, 33]) >= 0)
                     return true;
                 
                 // set search text
