@@ -83,6 +83,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
         // let the user override the default
         // $.pluginPattern.defaultOptions.optA = false
         defaultOptions: {
+            minListSize: 10,
             maxListSize: 20,
             maxMultiMatch: 50,
             warnMultiMatch: 'top {0} matches ...',
@@ -121,6 +122,12 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
             
             var select_tag = this;
             var $select_tag = $(select_tag);
+
+            if ($('option', $select_tag).size() < options.minListSize)
+            {
+                return this;
+            }
+
             // do not run twice on the same select tag
             if ($select_tag.data('AICelements')){                
                 return this;
@@ -140,10 +147,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
             if ($.meta){
                 meta_opts = $.extend({}, options, $select_tag.data());
-            }            
-//
-//            var $empty_opt = $('<option value="_E_M_P_T_Y_"></option>');
-//            $select_tag.append($empty_opt);
+            }
 
             var $top_match_div = $('<div>'+meta_opts.warnMultiMatch.replace(/\{0\}/g, meta_opts.maxMultiMatch)+'</div>')
             .css({
