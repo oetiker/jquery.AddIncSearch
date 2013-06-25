@@ -471,6 +471,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
             $input.blur(function(e) {
                 if (!over_blocker && !over_chooser) {
+                    $chooser.xCurrentRow = null;
                     input_hide();
                     return true;
                 }
