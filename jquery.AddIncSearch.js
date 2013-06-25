@@ -433,7 +433,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
             // hide dropdown replacement
             function input_hide(){
-                if ($chooser.xCurrentRow != null){
+                if ($chooser.xCurrentRow != null && over_chooser){
                     select_tag.selectedIndex = $chooser.xIdArr[$chooser.xCurrentRow];
                     $select_tag.change();
                 }
