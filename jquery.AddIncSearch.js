@@ -5,7 +5,7 @@ Contributions from: Haggi <hagman@gmx.de>
 
 $Id$
 
-This jquery 1.3.x plugin adds incremental search to selectboxes of
+This jquery 1.7.x plugin adds incremental search to selectboxes of
 your choics.
 
 If you want to 'modify' selectboxes in your document, do the
@@ -299,7 +299,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
             // positioning
             function position_update() {
-                var position = $select_tag.position();
+                var position = $select_tag.offset();
                 $chooser.css({
                     top: position.top+$select_tag.outerHeight() + 2,
                     left: position.left
@@ -543,12 +543,6 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
     };
 
     $.fn.AddIncSearch = function(options) {
-        if ($.browser.msie){
-            var bvers = (parseInt($.browser.version));
-            if (bvers < 7) {
-                return this; // do not use with ie6, does not work
-            }
-        }
         var localOpts = $.extend(
             {}, // start with an empty map
             $.AddIncSearch.defaultOptions, // add defaults
