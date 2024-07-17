@@ -5,7 +5,7 @@ Contributions from: Haggi <hagman@gmx.de>
 
 $Id$
 
-This jquery 1.7.x plugin adds incremental search to selectboxes of
+This jquery 3.7.1 plugin adds incremental search to selectboxes of
 your choics.
 
 If you want to 'modify' selectboxes in your document, do the
